@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greengrass
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: greengrass
+  name: greengrass-deployment
+spec:
+  selector:
+    matchLabels:
+      app: greengrass
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: greengrass
+    spec:
+      containers:
+      - name: greengrass
+        image: public.ecr.aws/f3r7z4u4/ggv2-arm:1.0
+        env:
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: GGC_ROOT_PATH
+          value: "/greengrass/v2"
+        - name: AWS_REGION
+          value: "eu-west-1"
+        - name: PROVISION
+          value: "true"
+        - name: THING_NAME
+          value: "k3s_gg_core"
+        - name: THING_GROUP_NAME
+          value: "k3s_gg_core_group"
+        - name: TES_ROLE_NAME
+          value: "k3s_TokenExchangeRole"
+        - name: TES_ROLE_ALIAS_NAME
+          value: "k3s_TokenExchangeRoleAlias"
+        - name: COMPONENT_DEFAULT_USER
+          value: "ggc_user:ggc_group"
+        - name: DEPLOY_DEV_TOOLS
+          value: "false"
+        ports:
+        - containerPort: 8883
+        volumeMounts:
+        - mountPath: /root/.aws
+          name: credentials
+        - mountPath: /greengrass/v2/logs
+          name: logs
+      volumes:
+      - name: credentials
+        hostPath:
+          path: /home/pi/.aws
+          type: Directory
+      - name: logs
+        hostPath:
+          path: /home/pi/greengrass/v2/logs 
+          type: Directory

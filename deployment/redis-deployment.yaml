@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greengrass
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: greengrass
+  name: redis-deployment
+  labels:
+    app: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: arm32v7/redis
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - mountPath: /data
+          name: data
+        - mountPath: /greengrass/v2
+          name: user
+      volumes:
+      - name: data
+        hostPath:
+          path: /home/pi/redis/orders/data
+          type: Directory
+      - name: user
+        hostPath:
+          path: /home/pi/greengrass/v2
+          type: Directory

@@ -1,0 +1,37 @@
+FROM arm32v7/ubuntu:18.04
+
+RUN apt-get update \        
+    && apt-get --force-yes -y upgrade
+
+ENV GREENGRASS_RELEASE_VERSION=2.1.0
+ENV GREENGRASS_ZIP_FILE=greengrass-${GREENGRASS_RELEASE_VERSION}.zip
+ENV GREENGRASS_RELEASE_URI=https://d2s8p88vqu9w66.cloudfront.net/releases/${GREENGRASS_ZIP_FILE}
+ENV GREENGRASS_ZIP_SHA256=${GREENGRASS_ZIP_FILE}.sha256
+
+RUN apt-get install -y openjdk-11-jdk python3-pip tar unzip wget sudo procps \
+    && wget $GREENGRASS_RELEASE_URI \
+    && mkdir -p /opt/greengrassv2 /greengrass/v2 && unzip $GREENGRASS_ZIP_FILE -d /opt/greengrassv2 && rm greengrass-2.1.0.zip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up Greengrass v2 execution parameters
+ENV GGC_ROOT_PATH=/greengrass/v2 \
+    TINI_KILL_PROCESS_GROUP=1 \ 
+    PROVISION=false \
+    TES_ROLE_NAME=default_tes_role_name \
+    TES_ROLE_ALIAS_NAME=default_tes_role_alias_name \
+    COMPONENT_DEFAULT_USER=default_component_user \
+    DEPLOY_DEV_TOOLS=false \
+    LOG_LEVEL=$LOG_LEVEL \
+    INIT_CONFIG=$INIT_CONFIG
+
+RUN groupadd --gid 998 ggc_group && useradd --uid 999 --gid ggc_group --shell /bin/bash --create-home ggc_user
+
+# Entrypoint script to install and run Greengrass
+COPY "greengrass-entrypoint.sh" /
+
+RUN env && chmod +x /greengrass-entrypoint.sh
+
+CMD ["sh", "/greengrass-entrypoint.sh" ]
+
+# Expose port to subscribe to MQTT messages, network port
+EXPOSE 8883
