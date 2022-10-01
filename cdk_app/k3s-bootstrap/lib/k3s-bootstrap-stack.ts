@@ -1,14 +1,16 @@
-import * as cdk from '@aws-cdk/core';
-import * as iam from '@aws-cdk/aws-iam';
-import * as ssm from '@aws-cdk/aws-ssm';
-import * as s3 from '@aws-cdk/aws-s3';
-import * as cr from '@aws-cdk/custom-resources';
-import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
-import {CfnOutput} from "@aws-cdk/core";
-import { ManagedPolicy } from '@aws-cdk/aws-iam';
+import * as cdk from 'aws-cdk-lib';
+import { Stack, StackProps } from 'aws-cdk-lib';
+import { aws_iam as iam } from 'aws-cdk-lib';
+import { aws_ssm as ssm } from 'aws-cdk-lib';
+import { aws_s3 as s3 } from 'aws-cdk-lib';
+import { aws_secretsmanager as secretsmanager } from 'aws-cdk-lib';
+import { custom_resources as cr } from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+
+import { CfnOutput } from 'aws-cdk-lib';
 
 export class K3SBootstrapStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     // First create an Amazon S3 bucket
@@ -30,7 +32,7 @@ export class K3SBootstrapStack extends cdk.Stack {
             assumedBy: new iam.ServicePrincipal('ssm.amazonaws.com')
         })
 
-        managedInstanceRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
+        managedInstanceRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
 
         const customResource = new cr.AwsCustomResource(this, 'activation-custom-resource', {
             installLatestAwsSdk: true,
